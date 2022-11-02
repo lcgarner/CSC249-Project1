@@ -1,98 +1,63 @@
 from socket import *
-import sys # In order to terminate the program
+import sys
+import time
+import threading
+from concurrent.futures import ThreadPoolExecutor
 
-serverSocket = socket(AF_INET, SOCK_STREAM)
-
-# -------------
-# Fill in start
-# -------------
-serverHost='localhost'
-serverPort=80
-serverSocket.bind(('',serverPort))
-serverSocket.listen(1)
-print ('the web server is up on port:'),serverPort
-  # TODO: Assign a port number
-  #       Bind the socket to server address and server port
-  #       Tell the socket to listen to at most 1 connection at a time
-
-# -----------
-# Fill in end
-# -----------
-
-while True:
-    
-    # Establish the connection
-    print('Ready to serve...') 
-    
-    # -------------
-    # Fill in start
-    # -------------
-    connectionSocket, addr = serverSocket.accept() # TODO: Set up a new connection from the client
-    # -----------
-    # Fill in end
-    # -----------
-
+def thread(connectionSocket):
     try:
-        
-        # -------------
-        # Fill in start
-        # -------------
-        message = connectionSocket.recv(1024).decode() # TODO: Receive the request message from the client
-       
-        message.split()[1]
-         
-        # -----------
-        # Fill in end
-        # -----------
-        
-        # Extract the path of the requested object from the message
-        # The path is the second part of HTTP header, identified by [1]
+        message = connectionSocket.recv(1024)
+        print(message)
+        #Extracts the path of the requested object from the message
         filename = message.split()[1]
-
-        # Because the extracted path of the HTTP request includes 
-        # a character '\', we read the path from the second character
+        #Reads the extracted path of the HTTP request from the second character
         f = open(filename[1:])
+		#Stores contents of file in a temporary buffer
+        outputdata = f.read()
+        #Sends one HTTP header line into socket
+        connectionSocket.send('HTTP/1.1 200 OK\r\n\r\n'.encode())
         
-        # -------------
-        # Fill in start
-        # -------------
-        outputdata = f.read() # TODO: Store the entire contents of the requested file in a temporary buffer
-        
-        # -----------
-        # Fill in end
-        # -----------
-
-        # -------------
-        # Fill in start
-        # -------------
-            # TODO: Send one HTTP header line into socket
-        connectionSocket.send("HTTP/1.1 200 OK\r\n\r\n".encode())
-        #connectionSocket.send(outputdata.encode())
-        
-        # -----------
-        # Fill in end
-        # -----------
-
-        # Send the content of the requested file to the client
+		#Sends contents of the file to client
         for i in range(0, len(outputdata)):
             connectionSocket.send(outputdata[i].encode())
-            connectionSocket.send("\r\n".encode())
-            
-        
-
+        connectionSocket.send("\r\n".encode())
+        print("Close connection to client")
         connectionSocket.close()
 
     except IOError:
-        # -------------
-        # Fill in start
-        # -------------
-            # TODO: Send response message for file not found
-            #       Close client socket
-        connectionSocket.send('\nHTTP/1.1 404 Not Found\n\n'.encode())
-        print ("404 Page Not Found")
-        # -----------
-        # Fill in end
-        # -----------
+        #Sends response message for file not found
+        connectionSocket.send("HTTP/1.1 404 Not Found\r\n\r\n".encode()) 
+        outputdata = "404 not found"
+        #Sends error message to the client
 
-serverSocket.close()
-sys.exit()  #Terminate the program after sending the corresponding data
+        for i in range(0, len(outputdata)):
+            connectionSocket.send(outputdata[i].encode())
+        connectionSocket.send("\r\n".encode())
+		#Closes client socket
+        connectionSocket.close()
+
+def main(): 
+    server_socket = socket(AF_INET, SOCK_STREAM)
+    #Assigns a port number 
+    socket_port = 1979
+    #Binds the socket to server IP/server port
+    server = "0.0.0.0"
+    print(server)
+    server_socket.bind((server, socket_port))
+    server_socket.listen(10)
+    print("Web server is running on port:", socket_port)
+    threadExecutor = ThreadPoolExecutor()
+
+    while True:
+    	#Confirms the connection
+        print('Ready to serve...') 
+    	#Sets up a new connection from the client
+        connectionSocket, addr = server_socket.accept()
+        print("Accepting from:", addr)
+        threadExecutor.submit(thread, connectionSocket)
+        
+    server_socket.close()
+    sys.exit() 
+
+if __name__=="__main__":
+    main()
