@@ -1,5 +1,7 @@
 Use this file to record your reflection on this assignment and answer the prompts.
 
+**I worked with Nathalie Trouba**
+
 What worked, what didn't, what advice would you give someone taking this course in the future?
     
     I had some trouble accessing client.py through the terminal, but this got a lot better with practice. If I were to give advice to someone taking this course in the future, I would definitely stress to them the importance of being comfortable with the command line/the terminal. A strategy that worked well for me was to actually stand up and act out the different steps I needed to code. 
